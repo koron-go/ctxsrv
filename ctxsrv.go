@@ -17,14 +17,32 @@ type ServeFunc func(net.Listener) error
 // ShutdownFunc provides a function to shutdown a service.
 type ShutdownFunc func(context.Context) error
 
+// DoneFunc provides function to monitor `Done` event.
+type DoneFunc func()
+
 // Config provides configuration for `ctxsrv.Serve()` function.
 type Config struct {
 	Listen   ListenFunc
 	Serve    ServeFunc
 	Shutdown ShutdownFunc
 
+	DoneContext DoneFunc
+	DoneServer  DoneFunc
+
 	// ShutdownTimeout specifies duration for timeout of shutdown.
 	ShutdownTimeout time.Duration
+}
+
+// WithDoneContext sets the DoneContext handler.
+func (cfg *Config) WithDoneContext(fn DoneFunc) *Config {
+	cfg.DoneContext = fn
+	return cfg
+}
+
+// WithDoneServer sets the DoneServer handler.
+func (cfg *Config) WithDoneServer(fn DoneFunc) *Config {
+	cfg.DoneServer = fn
+	return cfg
 }
 
 // WithShutdownTimeout sets the timeout duration to shutdown.
@@ -78,8 +96,14 @@ func Serve(ctx context.Context, cfg Config) error {
 	go func() {
 		select {
 		case <-ctx.Done():
+			if cfg.DoneContext != nil {
+				cfg.DoneContext()
+			}
 			ch <- cfg.shutdown()
 		case <-srvCtx.Done():
+			if cfg.DoneServer != nil {
+				cfg.DoneServer()
+			}
 			ch <- nil
 		}
 		close(ch)
