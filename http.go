@@ -15,7 +15,13 @@ func HTTP(srv *http.Server) *Config {
 			}
 			return net.Listen("tcp", addr)
 		},
-		Serve:    srv.Serve,
+		Serve: func(ln net.Listener) error {
+			err := srv.Serve(ln)
+			if err != nil && err != http.ErrServerClosed {
+				return err
+			}
+			return nil
+		},
 		Shutdown: srv.Shutdown,
 	}
 }
@@ -31,7 +37,11 @@ func HTTPS(srv *http.Server, certFile, keyFile string) *Config {
 			return net.Listen("tcp", addr)
 		},
 		Serve: func(ln net.Listener) error {
-			return srv.ServeTLS(ln, certFile, keyFile)
+			err := srv.ServeTLS(ln, certFile, keyFile)
+			if err != nil && err != http.ErrServerClosed {
+				return err
+			}
+			return nil
 		},
 		Shutdown: srv.Shutdown,
 	}
