@@ -61,7 +61,7 @@ func (cfg Config) verify() error {
 		return errors.New("no Listen function")
 	}
 	if cfg.Serve == nil {
-		return errors.New("no Server function")
+		return errors.New("no Serve function")
 	}
 	return nil
 }
