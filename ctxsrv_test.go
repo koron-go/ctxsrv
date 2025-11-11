@@ -122,7 +122,7 @@ func TestShutdownTimeout(t *testing.T) {
 		Shutdown: func(ctx context.Context) error {
 			<-ctx.Done()
 			defer func() {
-				time.Sleep(200 * time.Millisecond)
+				time.Sleep(100 * time.Millisecond)
 				ln.cancel()
 			}()
 			return errors.New("shutdown timeouted")
