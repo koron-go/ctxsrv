@@ -9,6 +9,14 @@
 `ctxsrv` is a Go package which provides a `context.Context` aware server.
 It helps to implement graceful shutdown mechanism for your servers.
 
+## Getting Started
+
+Install or update the package:
+
+```console
+$ go get github.com/koron-go/ctxsrv@latest
+```
+
 ## Usage
 
 To use `ctxsrv`, you need to create a `ctxsrv.Config` object and pass it to the `ctxsrv.Serve` function. The `Config` object requires three functions:
@@ -20,7 +28,7 @@ To use `ctxsrv`, you need to create a `ctxsrv.Config` object and pass it to the 
 The `ctxsrv` package provides helper functions to create a `Config` for `net/http` servers:
 
 *   `ctxsrv.HTTP`: Creates a `Config` for an HTTP server.
-*   `ctxsrv.HTTPS`: Creates a `Config` for an HTTPS server.
+*   `ctxsrv.HTTPS`: (OPTIONAL) Creates a `Config` for an HTTPS server.
 
 ## Sample Code
 
