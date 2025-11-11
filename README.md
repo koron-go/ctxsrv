@@ -23,12 +23,12 @@ To use `ctxsrv`, you need to create a `ctxsrv.Config` object and pass it to the 
 
 *   `ListenFunc`: Creates a `net.Listener`.
 *   `ServeFunc`: Starts the server with the created `net.Listener`.
-*   `ShutdownFunc`: Shuts down the server gracefully.
+*   `ShutdownFunc`: (OPTIONAL) Shuts down the server gracefully.
 
 The `ctxsrv` package provides helper functions to create a `Config` for `net/http` servers:
 
 *   `ctxsrv.HTTP`: Creates a `Config` for an HTTP server.
-*   `ctxsrv.HTTPS`: (OPTIONAL) Creates a `Config` for an HTTPS server.
+*   `ctxsrv.HTTPS`: Creates a `Config` for an HTTPS server.
 
 ## Sample Code
 
