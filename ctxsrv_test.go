@@ -2,6 +2,7 @@ package ctxsrv_test
 
 import (
 	"context"
+	"errors"
 	"net"
 	"testing"
 	"time"
@@ -74,5 +75,71 @@ func TestServerImmediatelyTerminates(t *testing.T) {
 	}
 	if !doneCalled {
 		t.Error("DoneServer hook is not called")
+	}
+}
+
+func serverFactory(pln **dummyListener) func(net.Listener) error {
+	return func(ln net.Listener) error {
+		dummyLn := ln.(*dummyListener)
+		*pln = dummyLn
+		for {
+			select {
+			case <-dummyLn.ctx.Done():
+				return dummyLn.ctx.Err()
+			}
+		}
+	}
+}
+
+func TestContextCanceled(t *testing.T) {
+	var ln *dummyListener
+	cfg := &ctxsrv.Config{
+		Listen: listenerFactory(t.Context()),
+		Serve:  serverFactory(&ln),
+		Shutdown: func(context.Context) error {
+			ln.cancel()
+			return nil
+		},
+	}
+	doneCalled := false
+	cfg.WithDoneContext(func() { doneCalled = true })
+	ctx, cancel := context.WithTimeout(t.Context(), 200*time.Millisecond)
+	defer cancel()
+	err := cfg.ServeWithContext(ctx)
+	if !errors.Is(err, context.Canceled) {
+		t.Errorf("unexpected error (want context.Canceled): %s", err)
+	}
+	if !doneCalled {
+		t.Error("DoneContext hook is not called")
+	}
+}
+
+func TestShutdownTimeout(t *testing.T) {
+	var ln *dummyListener
+	cfg := &ctxsrv.Config{
+		Listen: listenerFactory(t.Context()),
+		Serve:  serverFactory(&ln),
+		Shutdown: func(ctx context.Context) error {
+			<-ctx.Done()
+			defer func() {
+				time.Sleep(200 * time.Millisecond)
+				ln.cancel()
+			}()
+			return errors.New("shutdown timeouted")
+		},
+	}
+
+	cfg.WithShutdownTimeout(200 * time.Millisecond)
+
+	doneCalled := false
+	cfg.WithDoneContext(func() { doneCalled = true })
+	ctx, cancel := context.WithTimeout(t.Context(), 200*time.Millisecond)
+	defer cancel()
+	err := cfg.ServeWithContext(ctx)
+	if !errors.Is(err, context.Canceled) {
+		t.Errorf("unexpected error (want context.Canceled): %s", err)
+	}
+	if !doneCalled {
+		t.Error("DoneContext hook is not called")
 	}
 }
